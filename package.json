@@ -1,0 +1,20 @@
+{
+  "name": "herdr-telemetry-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Herdr plugin that bridges workspace, repo, agent, model, and trace telemetry to external clients.",
+  "type": "commonjs",
+  "bin": {
+    "herdr-telemetry": "bin/herdr-telemetry.js"
+  },
+  "scripts": {
+    "snapshot": "node bin/herdr-telemetry.js snapshot",
+    "daemon": "node bin/herdr-telemetry.js daemon",
+    "dashboard": "node bin/herdr-telemetry.js dashboard",
+    "init-config": "node bin/herdr-telemetry.js init-config",
+    "status": "node bin/herdr-telemetry.js status"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

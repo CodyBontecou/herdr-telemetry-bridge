@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "pollFocusSeconds": 5,
+  "snapshotIntervalSeconds": 30,
+  "redactTraceText": true,
+  "includeRawTranscripts": false,
+  "includeSessionPaths": true,
+  "includeRawHerdrEvents": false,
+  "estimateTraceTokens": true,
+  "includeThinkingInTokenEstimates": false,
+  "resolveGitRepoRoots": true,
+  "sinks": [
+    {
+      "type": "ndjson",
+      "path": "$STATE_DIR/events.ndjson"
+    }
+  ]
+}

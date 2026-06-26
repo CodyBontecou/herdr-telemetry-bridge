@@ -1,0 +1,60 @@
+id = "local.herdr-telemetry-bridge"
+name = "Herdr Telemetry Bridge"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Emit Herdr workspace, pane, agent, repo, model, and trace-summary telemetry to external clients."
+platforms = ["macos", "linux"]
+
+[[actions]]
+id = "snapshot"
+title = "Emit telemetry snapshot"
+contexts = ["workspace"]
+command = ["node", "bin/herdr-telemetry.js", "snapshot"]
+
+[[actions]]
+id = "init-config"
+title = "Write default telemetry config"
+contexts = ["workspace"]
+command = ["node", "bin/herdr-telemetry.js", "init-config"]
+
+[[actions]]
+id = "init-time-md-config"
+title = "Write time.md telemetry config"
+contexts = ["workspace"]
+command = ["node", "bin/herdr-telemetry.js", "init-config", "--time-md"]
+
+[[events]]
+on = "workspace.focused"
+command = ["node", "bin/herdr-telemetry.js", "event"]
+
+[[events]]
+on = "pane.focused"
+command = ["node", "bin/herdr-telemetry.js", "event"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["node", "bin/herdr-telemetry.js", "event"]
+
+[[events]]
+on = "pane.created"
+command = ["node", "bin/herdr-telemetry.js", "event"]
+
+[[events]]
+on = "pane.closed"
+command = ["node", "bin/herdr-telemetry.js", "event"]
+
+[[events]]
+on = "pane.exited"
+command = ["node", "bin/herdr-telemetry.js", "event"]
+
+[[panes]]
+id = "daemon"
+title = "Telemetry Bridge Daemon"
+placement = "split"
+command = ["node", "bin/herdr-telemetry.js", "daemon"]
+
+[[panes]]
+id = "dashboard"
+title = "Telemetry Dashboard"
+placement = "overlay"
+command = ["node", "bin/herdr-telemetry.js", "dashboard", "--watch"]
