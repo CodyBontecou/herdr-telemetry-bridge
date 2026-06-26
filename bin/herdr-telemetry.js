@@ -420,6 +420,11 @@ function scanSession(filePath, config) {
     },
     estimated_tokens: config.estimateTraceTokens ? 0 : null,
     byte_size: fs.statSync(filePath).size,
+    ...(config.includeRawTranscripts ? {
+      transcript_format: 'herdr_agent_messages_v1',
+      transcript_text_redacted: config.redactTraceText !== false,
+      transcript: [],
+    } : {}),
   };
   const toolNames = new Set();
   const raw = fs.readFileSync(filePath, 'utf8');
@@ -439,6 +444,9 @@ function scanSession(filePath, config) {
     collectExplicitTokens(object, stats.explicit_tokens);
     if (object.type === 'message' && object.message) {
       stats.message_count += 1;
+      if (config.includeRawTranscripts) {
+        stats.transcript.push(transcriptEntryFromMessageEvent(object, config, stats.line_count));
+      }
       const role = object.message.role;
       if (role === 'user') stats.user_message_count += 1;
       if (role === 'assistant') stats.assistant_message_count += 1;
@@ -459,6 +467,65 @@ function scanSession(filePath, config) {
   stats.tool_names = Array.from(toolNames).sort();
   normalizeExplicitTokenTotals(stats.explicit_tokens);
   return stats;
+}
+
+function transcriptEntryFromMessageEvent(object, config, sourceLine) {
+  const message = object.message || {};
+  const entry = {
+    source_line: sourceLine,
+    timestamp: object.timestamp || message.timestamp || null,
+    role: message.role || null,
+  };
+  if (message.id || message.message_id) entry.message_id = message.id || message.message_id;
+  if (message.type || message.message_type) entry.message_type = message.type || message.message_type;
+  if (Array.isArray(message.content)) {
+    entry.content = cloneTranscriptValue(message.content, config);
+  } else if (Object.prototype.hasOwnProperty.call(message, 'content')) {
+    entry.content = cloneTranscriptValue(message.content, config);
+  }
+  if (Object.prototype.hasOwnProperty.call(message, 'text')) {
+    entry.text = cloneTranscriptValue(message.text, config, 'text');
+  }
+  return entry;
+}
+
+function cloneTranscriptValue(value, config, key = '') {
+  const redact = config.redactTraceText !== false;
+  if (!redact) return value;
+  if (value === null || value === undefined) return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    return isSafeTranscriptKey(key) ? value : '[redacted]';
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => cloneTranscriptValue(item, config, key));
+  }
+  if (typeof value === 'object') {
+    const out = {};
+    for (const [childKey, childValue] of Object.entries(value)) {
+      out[childKey] = cloneTranscriptValue(childValue, config, childKey);
+    }
+    return out;
+  }
+  return value;
+}
+
+function isSafeTranscriptKey(key) {
+  return [
+    'type',
+    'role',
+    'name',
+    'id',
+    'message_id',
+    'message_type',
+    'toolUseId',
+    'toolCallId',
+    'callId',
+    'timestamp',
+    'source',
+    'agent',
+    'kind',
+  ].includes(key);
 }
 
 function normalizeExplicitTokenTotals(explicit) {

@@ -193,6 +193,8 @@ Default config:
 |---|---:|---|
 | `pollFocusSeconds` | `5` | How often the daemon checks the focused pane. |
 | `snapshotIntervalSeconds` | `30` | How often the daemon emits agent snapshots and trace summaries. |
+| `includeRawTranscripts` | `false` | Include normalized transcript messages in `trace.transcript`. Raw text is still redacted unless `redactTraceText` is also `false`. |
+| `redactTraceText` | `true` | Redact transcript text fields when transcript export is enabled. Set to `false` only for trusted local sinks. |
 | `includeSessionPaths` | `true` | Include local session-log paths in events. Turn off if paths are sensitive. |
 | `includeRawHerdrEvents` | `false` | Include raw Herdr hook payloads in `herdr.host_event.v1`. |
 | `estimateTraceTokens` | `true` | Estimate tokens from message text when exact counters are unavailable. |
@@ -306,7 +308,18 @@ Potentially sensitive fields include:
 - approximate token counters
 - raw Herdr event payloads if enabled
 
-Defaults avoid raw transcript export, but local session logs may still contain sensitive data. Review `config.json` before enabling HTTP or command sinks.
+Defaults avoid raw transcript export. To deliberately export transcript messages, opt in with:
+
+```json
+{
+  "includeRawTranscripts": true,
+  "redactTraceText": false
+}
+```
+
+With `includeRawTranscripts: true`, trace summaries include `trace.transcript_format`, `trace.transcript_text_redacted`, and `trace.transcript`. If `redactTraceText` remains `true`, text-like fields are replaced with `[redacted]` while message roles/tool names are preserved.
+
+Local session logs may still contain sensitive data. Review `config.json` before enabling HTTP or command sinks.
 
 ## Development
 
